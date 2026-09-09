@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:latest
+    container_name: student-mgr-api
+    environment:
+      POSTGRES_USER: studentmgr
+      POSTGRES_PASSWORD: studentmgr
+      POSTGRES_DB: studentmgr
+    ports:
+      - "5433:5432"
+    volumes:
+       - postgres_data:/var/lib/postgresql
+
+volumes:
+  postgres_data:
