@@ -1,17 +1,20 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule, ObserveInstrument } from './app.module.js';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
-import { ValidationPipe } from './common/validation/validation.js';
+import { ValidationPipe } from '@nestjs/common';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter.js';
 import { loggerMiddleware } from './common/middleware/logger.middleware.js';
+import { TransformInterceptor } from './common/interceptor/transform.interceptor.js';
+import { OperationInterceptor } from './common/interceptor/operation.interceptor.js';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule, {
     instrument: ObserveInstrument,
   });
-  app.useGlobalPipes(new ValidationPipe());
+  app.useGlobalPipes(new ValidationPipe({transform: true, whitelist: true, forbidNonWhitelisted: true}));
   app.useGlobalFilters(new GlobalExceptionFilter());
   app.use(loggerMiddleware);
+  app.useGlobalInterceptors(new TransformInterceptor(), new OperationInterceptor());
 
   const config = new DocumentBuilder()
     .setTitle('Student Management System API')

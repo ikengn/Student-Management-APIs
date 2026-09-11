@@ -1,4 +1,4 @@
-import { IsString, IsEmail, IsDate, IsNotEmpty } from 'class-validator';
+import { IsString, IsEmail, IsNotEmpty, IsDateString } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class CreateStudentDto {
@@ -10,8 +10,7 @@ export class CreateStudentDto {
   @IsNotEmpty()
   readonly email: string;
 
-  @Type(() => Date)
-  @IsDate()
+  @IsDateString()
   @IsNotEmpty()
   readonly dateOfBirth: Date;
 }

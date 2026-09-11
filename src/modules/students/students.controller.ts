@@ -28,6 +28,8 @@ export class StudentsController {
   constructor(private readonly studentsService: StudentsService) {}
 
   @Post()
+  @Roles(['admin'])
+  @UseGuards(RoleGuard)
   @ApiOperation({ 
     summary: 'Create a new student',
     description: 'Creates a new student with name, email, and date of birth. Returns the created student object.',
@@ -37,8 +39,6 @@ export class StudentsController {
   }
 
   @Get()
-  @Roles(['admin'])
-  @UseGuards(RoleGuard)
   @ApiOperation({
     summary: 'List students (paginated) — ADMIN',
     description: 'Returns a paginated list of students. Supports page/limit, case-insensitive search by name/email, and filtering by course enrollment via courseId.',
@@ -57,6 +57,8 @@ export class StudentsController {
   }
 
   @Patch(':id')
+  @Roles(['admin'])
+  @UseGuards(RoleGuard)
   @ApiOperation({ 
     summary: 'Update a student',
     description: 'Updates the details of a student by their ID.',
@@ -77,6 +79,8 @@ export class StudentsController {
   }
 
   @Post(':id/enroll')
+  @Roles(['admin'])
+  @UseGuards(RoleGuard)
   @ApiOperation({
     summary: 'Enroll a student into a course',
     description: 'Enrolls the student (by id) into a course identified by its code.',

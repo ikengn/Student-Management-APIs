@@ -1,4 +1,4 @@
-import { IsString, IsEmail, IsDate, IsOptional } from 'class-validator';
+import { IsString, IsEmail, IsDateString, IsOptional } from 'class-validator';
 import { Type } from 'class-transformer';
 
 export class UpdateStudentDto {
@@ -10,8 +10,7 @@ export class UpdateStudentDto {
   @IsOptional()
   readonly email?: string;
 
-  @Type(() => Date)
-  @IsDate()
+  @IsDateString()
   @IsOptional()
   readonly dateOfBirth?: Date;
 }
