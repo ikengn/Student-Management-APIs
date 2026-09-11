@@ -33,6 +33,7 @@ describe('CoursesService', () => {
     repo = {
       findOne: vi.fn(),
       find: vi.fn(),
+      findAndCount: vi.fn(),
       create: vi.fn(),
       save: vi.fn(),
       update: vi.fn(),
@@ -74,24 +75,32 @@ describe('CoursesService', () => {
     });
   });
 
-  describe('findAll (pagination + filters)', () => {
-    it('page 3, limit 4 -> skip 8, take 4', async () => {
-      repo.find.mockResolvedValue([{ id: 1 }]);
+  describe('findAll (pagination + filters + meta)', () => {
+    it('page 3, limit 4 -> skip 8, take 4, and returns items + pagination meta', async () => {
+      repo.findAndCount.mockResolvedValue([[{ id: 1 }], 20]);
       const result = await service.findAll({ page: 3, limit: 4 } as any);
-      const opts = repo.find.mock.calls[0][0];
+      const opts = repo.findAndCount.mock.calls[0][0];
       expect(opts.skip).toBe(8);
       expect(opts.take).toBe(4);
-      expect(result).toEqual([{ id: 1 }]);
+      expect(result).toEqual({
+        items: [{ id: 1 }],
+        meta: { total: 20, page: 3, limit: 4, total_pages: 5 },
+      });
+    });
+    it('total_pages is ceil(total / limit)', async () => {
+      repo.findAndCount.mockResolvedValue([[{ id: 1 }], 21]);
+      const result = await service.findAll({ page: 1, limit: 10 } as any);
+      expect(result.meta).toEqual({ total: 21, page: 1, limit: 10, total_pages: 3 });
     });
     it('no filters -> empty where', async () => {
-      repo.find.mockResolvedValue([]);
+      repo.findAndCount.mockResolvedValue([[], 0]);
       await service.findAll({ page: 1, limit: 10 } as any);
-      expect(repo.find.mock.calls[0][0].where).toEqual({});
+      expect(repo.findAndCount.mock.calls[0][0].where).toEqual({});
     });
     it('name/code filters -> corresponding where keys', async () => {
-      repo.find.mockResolvedValue([]);
+      repo.findAndCount.mockResolvedValue([[], 0]);
       await service.findAll({ page: 1, limit: 10, name: 'algo', code: 'CS' } as any);
-      const where = repo.find.mock.calls[0][0].where;
+      const where = repo.findAndCount.mock.calls[0][0].where;
       expect(where.name).toBeDefined();
       expect(where.code).toBeDefined();
     });

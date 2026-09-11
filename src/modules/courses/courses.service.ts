@@ -24,7 +24,7 @@ export class CoursesService {
 
   async findAll(paginationQueryDto: PaginationQueryDto) {
     const { page, limit, name, code } = paginationQueryDto;
-    const data = await this.courseRepository.find({
+    const [data, total] = await this.courseRepository.findAndCount({
       skip: (page - 1) * limit,
       take: limit,
       where: {
@@ -32,7 +32,15 @@ export class CoursesService {
         ...(code ? { code: ILike(`%${code}%`) } : {}),
       },
     });
-    return data;
+    return {
+      items: data,
+      meta: {
+        total,
+        page,
+        limit,
+        total_pages: Math.ceil(total / limit),
+      },
+    };
   }
 
   async findOne(id: number) {

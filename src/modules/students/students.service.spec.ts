@@ -36,6 +36,7 @@ describe('StudentsService', () => {
     repo = {
       findOne: vi.fn(),
       find: vi.fn(),
+      findAndCount: vi.fn(),
       create: vi.fn(),
       save: vi.fn(),
       update: vi.fn(),
@@ -82,32 +83,41 @@ describe('StudentsService', () => {
     });
   });
 
-  describe('findAll (pagination + filters)', () => {
-    it('page 2, limit 5 -> skip 5, take 5', async () => {
-      repo.find.mockResolvedValue([{ id: 1 }]);
+  describe('findAll (pagination + filters + meta)', () => {
+    it('page 2, limit 5 -> skip 5, take 5, and returns items + pagination meta', async () => {
+      repo.findAndCount.mockResolvedValue([[{ id: 1 }], 12]);
       const result = await service.findAll({ page: 2, limit: 5 } as any);
-      const opts = repo.find.mock.calls[0][0];
+      const opts = repo.findAndCount.mock.calls[0][0];
       expect(opts.skip).toBe(5);
       expect(opts.take).toBe(5);
-      expect(result).toEqual([{ id: 1 }]);
+      expect(result).toEqual({
+        items: [{ id: 1 }],
+        meta: { total: 12, page: 2, limit: 5, total_pages: 3 },
+      });
+    });
+
+    it('total_pages is ceil(total / limit)', async () => {
+      repo.findAndCount.mockResolvedValue([[{ id: 1 }], 21]);
+      const result = await service.findAll({ page: 1, limit: 10 } as any);
+      expect(result.meta).toEqual({ total: 21, page: 1, limit: 10, total_pages: 3 });
     });
 
     it('page 1 -> skip 0', async () => {
-      repo.find.mockResolvedValue([]);
+      repo.findAndCount.mockResolvedValue([[], 0]);
       await service.findAll({ page: 1, limit: 10 } as any);
-      expect(repo.find.mock.calls[0][0].skip).toBe(0);
+      expect(repo.findAndCount.mock.calls[0][0].skip).toBe(0);
     });
 
     it('no filters -> empty where', async () => {
-      repo.find.mockResolvedValue([]);
+      repo.findAndCount.mockResolvedValue([[], 0]);
       await service.findAll({ page: 1, limit: 10 } as any);
-      expect(repo.find.mock.calls[0][0].where).toEqual({});
+      expect(repo.findAndCount.mock.calls[0][0].where).toEqual({});
     });
 
     it('name/email/courseId filters -> corresponding where keys', async () => {
-      repo.find.mockResolvedValue([]);
+      repo.findAndCount.mockResolvedValue([[], 0]);
       await service.findAll({ page: 1, limit: 10, name: 'a', email: 'b', courseId: 3 } as any);
-      const where = repo.find.mock.calls[0][0].where;
+      const where = repo.findAndCount.mock.calls[0][0].where;
       expect(where.name).toBeDefined();
       expect(where.email).toBeDefined();
       expect(where.enrollments).toEqual({ course: { id: 3 } });

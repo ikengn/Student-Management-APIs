@@ -27,25 +27,30 @@ export class StudentsService {
   }
 
   async findAll(paginationQueryDto: PaginationQueryDto) {
-    if (paginationQueryDto) {
-      const { page, limit, name, email, courseId } = paginationQueryDto;
-      const data = await this.studentsRepository.find({
-        skip: (page - 1) * limit,
-        take: limit,
-        where: {
-          ...(name ? { name: ILike(`%${name}%`) } : {}),
-          ...(email ? { email: ILike(`%${email}%`) } : {}),
-          ...(courseId ? { enrollments: { course: { id: courseId } } } : {}),
+    const { page, limit, name, email, courseId } = paginationQueryDto;
+    const [data, total] = await this.studentsRepository.findAndCount({
+      skip: (page - 1) * limit,
+      take: limit,
+      where: {
+        ...(name ? { name: ILike(`%${name}%`) } : {}),
+        ...(email ? { email: ILike(`%${email}%`) } : {}),
+        ...(courseId ? { enrollments: { course: { id: courseId } } } : {}),
+      },
+      relations: {
+        enrollments: {
+          course: true,
         },
-        relations: {
-          enrollments: {
-            course: true,
-          },
-        },
-      });
-      return data;
-    }
-    return await this.studentsRepository.find();
+      },
+    });
+    return {
+      items: data,
+      meta: {
+        total,
+        page,
+        limit,
+        total_pages: Math.ceil(total / limit),
+      },
+    };
   }
 
   async findOne(id: number) {
